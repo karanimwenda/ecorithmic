@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from '@lucide/vue';
+import {
+    BookOpen,
+    CheckSquare,
+    Download,
+    FolderGit2,
+    LayoutGrid,
+    Upload,
+} from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -15,6 +22,9 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import bulkApprovals from '@/routes/bulk-approvals';
+import exports from '@/routes/exports';
+import imports from '@/routes/imports';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -22,6 +32,24 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+];
+
+const enrichmentNavItems: NavItem[] = [
+    {
+        title: 'Import',
+        href: imports.create.url(),
+        icon: Upload,
+    },
+    {
+        title: 'Bulk Approvals',
+        href: bulkApprovals.create.url(),
+        icon: CheckSquare,
+    },
+    {
+        title: 'Export',
+        href: exports.create.url(),
+        icon: Download,
     },
 ];
 
@@ -55,6 +83,7 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain label="Product Enrichment" :items="enrichmentNavItems" />
         </SidebarContent>
 
         <SidebarFooter>

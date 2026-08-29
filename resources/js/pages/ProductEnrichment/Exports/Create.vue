@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { store as exportStore } from '@/actions/App/Http/Controllers/ProductEnrichment/ExportController';
+import { Button } from '@/components/ui/button';
 
 const form = useForm({});
 
@@ -21,12 +22,12 @@ function createExport() {
             image package, and provenance manifest.
         </p>
 
-        <button
+        <Button
             :disabled="form.processing"
-            class="rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+            variant="default"
             @click="createExport"
         >
             {{ form.processing ? 'Starting export…' : 'Generate Export' }}
-        </button>
+        </Button>
     </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { store } from '@/actions/App/Http/Controllers/ProductEnrichment/ImportController';
+import { Button } from '@/components/ui/button';
 
 const form = useForm({
     spreadsheet: null as File | null,
@@ -100,13 +101,13 @@ function submit() {
             </div>
 
             <div>
-                <button
+                <Button
                     :disabled="form.processing"
-                    class="rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+                    variant="default"
                     type="submit"
                 >
                     {{ form.processing ? 'Uploading…' : 'Upload & Validate' }}
-                </button>
+                </Button>
             </div>
         </form>
     </div>

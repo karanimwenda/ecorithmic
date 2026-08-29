@@ -16,12 +16,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // User Story 1: Import
+    Route::inertia('/imports/create', 'ProductEnrichment/Imports/Upload')->name('imports.create');
     Route::post('/imports', [ImportController::class, 'store'])->name('imports.store');
     Route::get('/imports/{import}', [ImportController::class, 'show'])->name('imports.show');
     Route::post('/imports/{import}/confirmation', [ImportConfirmationController::class, 'store'])->name('imports.confirmation.store');
-
-    // Upload page
-    Route::inertia('/imports/create', 'ProductEnrichment/Imports/Upload')->name('imports.create');
 
     // User Story 3: Review
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
@@ -37,6 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/bulk-approvals', [BulkApprovalController::class, 'store'])->name('bulk-approvals.store');
 
     // User Story 7: Export
+    Route::inertia('/exports/create', 'ProductEnrichment/Exports/Create')->name('exports.create');
     Route::post('/exports', [ExportController::class, 'store'])->name('exports.store');
     Route::get('/exports/{export}', [ExportController::class, 'show'])->name('exports.show');
     Route::get('/exports/{export}/artifacts/{artifact}', [ExportArtifactController::class, 'show'])->name('exports.artifacts.show');
