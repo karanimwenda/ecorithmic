@@ -17,14 +17,40 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $sku
  * @property int|null $first_import_id
  * @property int|null $last_import_id
+ * @property array<string, bool>|null $enrichment_flags
+ * @property bool $is_ungrounded
  *
  * @method static ProductFactory factory($count = null, $state = [])
  */
-#[Fillable(['sku', 'first_import_id', 'last_import_id'])]
+#[Fillable(['sku', 'first_import_id', 'last_import_id', 'enrichment_flags', 'is_ungrounded'])]
 class Product extends Model implements HasMedia
 {
     /** @use HasFactory<ProductFactory> */
     use HasFactory, InteractsWithMedia;
+
+    protected function casts(): array
+    {
+        return [
+            'enrichment_flags' => 'array',
+            'is_ungrounded' => 'boolean',
+        ];
+    }
+
+    /**
+     * Mark a named enrichment job as complete and return true if all named jobs are now done.
+     * Used by ResearchProduct and AnalyzeProductPhoto to gate GenerateProductCopy dispatch (T103).
+     *
+     * @param  string[]  $requiredFlags  All flags that must be set before copy generation runs.
+     */
+    public function markEnrichmentFlag(string $flag, array $requiredFlags): bool
+    {
+        /** @var array<string, bool> $flags */
+        $flags = $this->enrichment_flags ?? [];
+        $flags[$flag] = true;
+        $this->update(['enrichment_flags' => $flags]);
+
+        return array_all($requiredFlags, fn ($required) => ! empty($flags[$required]));
+    }
 
     public function registerMediaCollections(): void
     {

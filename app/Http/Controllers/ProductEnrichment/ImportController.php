@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ProductEnrichment;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductEnrichment\StoreImportRequest;
 use App\Models\ProductEnrichment\Import;
+use App\Services\ProductEnrichment\OpenRouterClient;
 use App\Services\ProductEnrichment\SpreadsheetImporter;
 use App\Services\ProductEnrichment\ZipInspector;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ class ImportController extends Controller
     public function __construct(
         private readonly ZipInspector $zipInspector,
         private readonly SpreadsheetImporter $spreadsheetImporter,
+        private readonly OpenRouterClient $openRouterClient,
     ) {}
 
     public function store(StoreImportRequest $request): RedirectResponse
@@ -51,9 +53,8 @@ class ImportController extends Controller
         $unmatchedRatio = $rowCount > 0 ? $parsed['unmatched_row_count'] / $rowCount : 0;
         $autoRejected = $unmatchedRatio > $threshold;
 
-        // Estimate processing cost (research.md §1 pricing: sonar-pro per-request + tokens estimate)
-        // Conservative estimate: $0.018 per product (sonar call fee) + $0.02 copy + $0.01 vision
-        $estimatedCostUsd = $rowCount * 0.05;
+        // Estimate processing cost derived from per-call AI provider pricing (FR-003)
+        $estimatedCostUsd = $rowCount * $this->openRouterClient->estimateCostPerProduct();
 
         $validationReport = [
             'matched' => $parsed['matched_row_count'],
@@ -102,6 +103,8 @@ class ImportController extends Controller
                 'confirmed_at' => $import->confirmed_at,
                 'created_at' => $import->created_at,
             ],
+            // Pass the configurable threshold so the UI can display the actual value (FR-003/T107)
+            'unmatchedRowThreshold' => (float) config('product-enrichment.unmatched_row_threshold', 0.5),
         ]);
     }
 }

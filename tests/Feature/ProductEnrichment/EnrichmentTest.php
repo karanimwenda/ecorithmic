@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\ProductEnrichment\AnalyzeProductPhoto;
+use App\Jobs\ProductEnrichment\GenerateProductCopy;
 use App\Jobs\ProductEnrichment\ResearchProduct;
 use App\Models\ProductEnrichment\Attribute;
 use App\Models\ProductEnrichment\Import;
@@ -12,6 +13,7 @@ use App\Services\ProductEnrichment\QuoteVerifier;
 use App\Services\ProductEnrichment\ResearchResultsCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
@@ -225,4 +227,57 @@ it('excludes sources that describe a similar but not identical product (FR-008)'
         ->get();
 
     expect($disallowedValues)->toBeEmpty();
+});
+
+it('ResearchProduct::failed marks product as ungrounded and caps pending values to low (FR-010/T104)', function () {
+    // ─── Initialize data ─────────────────────────────────────────────────────
+    // Create a pending ai_research value with medium confidence
+    ProductAttributeValue::factory()->create([
+        'product_id' => $this->product->id,
+        'attribute_id' => $this->colorAttribute->id,
+        'origin' => 'ai_research',
+        'confidence_tier' => 'medium',
+        'review_status' => 'pending',
+        'is_current' => true,
+        'text_value' => 'blue',
+    ]);
+
+    // ─── Run the block of code in question ──────────────────────────────────
+    $job = new ResearchProduct($this->product, $this->import);
+    $job->failed(new RuntimeException('Research failed'));
+
+    // ─── Make assertions ─────────────────────────────────────────────────────
+    $this->product->refresh();
+    expect($this->product->is_ungrounded)->toBeTrue();
+
+    $cappedValue = ProductAttributeValue::where('product_id', $this->product->id)
+        ->where('origin', 'ai_research')
+        ->first();
+    expect($cappedValue->confidence_tier)->toBe('low');
+});
+
+it('GenerateProductCopy is dispatched only after both research AND vision flags are set (T103)', function () {
+    // ─── Setup the environment ───────────────────────────────────────────────
+    Queue::fake();
+
+    Http::fake([
+        'openrouter.ai/*' => Http::response([
+            'choices' => [['message' => ['content' => json_encode(['facts' => []])]]],
+            'usage' => ['prompt_tokens' => 100, 'completion_tokens' => 50],
+        ]),
+    ]);
+
+    // ─── Run the block of code in question ──────────────────────────────────
+    // Research completes first — copy must NOT be dispatched until vision is also done
+    $researchJob = new ResearchProduct($this->product, $this->import);
+    $researchJob->handle(new OpenRouterClient, new QuoteVerifier, new ResearchResultsCache);
+
+    // ─── Make assertions ─────────────────────────────────────────────────────
+    Queue::assertNotPushed(GenerateProductCopy::class);
+
+    // Vision completes — now copy SHOULD be dispatched
+    $visionJob = new AnalyzeProductPhoto($this->product, $this->import);
+    $visionJob->handle(new OpenRouterClient);
+
+    Queue::assertPushed(GenerateProductCopy::class);
 });

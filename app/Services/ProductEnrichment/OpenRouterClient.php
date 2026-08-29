@@ -81,6 +81,33 @@ class OpenRouterClient
     }
 
     /**
+     * Estimate per-product processing cost for an import's validation report (FR-003).
+     *
+     * Uses conservative token estimates per product for all three model calls:
+     * - perplexity/sonar-pro-search: per-request fee + ~1,200 input + ~400 output tokens
+     * - ibm-granite/granite-4.1-8b:  ~800 input + ~300 output tokens
+     * - google/gemini-2.5-flash-lite: ~200 input + ~100 output tokens (vision prompt)
+     */
+    public function estimateCostPerProduct(): float
+    {
+        $sonarRates = self::RATES['perplexity/sonar-pro-search'];
+        $graniteRates = self::RATES['ibm-granite/granite-4.1-8b'];
+        $geminiRates = self::RATES['google/gemini-2.5-flash-lite'];
+
+        $sonarCost = self::SONAR_PER_REQUEST_FEE
+            + (1200 / 1_000_000) * $sonarRates['input']
+            + (400 / 1_000_000) * $sonarRates['output'];
+
+        $graniteCost = (800 / 1_000_000) * $graniteRates['input']
+            + (300 / 1_000_000) * $graniteRates['output'];
+
+        $geminiCost = (200 / 1_000_000) * $geminiRates['input']
+            + (100 / 1_000_000) * $geminiRates['output'];
+
+        return round($sonarCost + $graniteCost + $geminiCost, 6);
+    }
+
+    /**
      * @param  array<string, int>  $usage
      */
     private function computeCost(string $model, array $usage): float

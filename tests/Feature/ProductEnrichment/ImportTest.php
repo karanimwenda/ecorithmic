@@ -1,8 +1,10 @@
 <?php
 
+use App\Jobs\ProductEnrichment\GenerateImageVariants;
 use App\Models\ProductEnrichment\Import;
 use App\Models\ProductEnrichment\Product;
 use App\Models\User;
+use App\Services\ProductEnrichment\OpenRouterClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -140,4 +142,51 @@ it('returns 422 for an unsafe archive (FR-005)', function () {
 
 it('requires authentication for import routes', function () {
     $this->post('/imports')->assertRedirect('/login');
+});
+
+it('confirmation dispatches GenerateImageVariants onto image-variants queue (T102)', function () {
+    Queue::fake();
+
+    // Store the fixture spreadsheet so the controller can parse it
+    $spreadsheetContents = file_get_contents(base_path('tests/Fixtures/ProductEnrichment/sample-catalog.xlsx'));
+    $archiveContents = file_get_contents(base_path('tests/Fixtures/ProductEnrichment/sample-photos.zip'));
+    Storage::disk('local')->put('imports/spreadsheets/sample.xlsx', (string) $spreadsheetContents);
+    Storage::disk('local')->put('imports/archives/sample.zip', (string) $archiveContents);
+
+    $import = Import::factory()->pendingValidation()->create([
+        'spreadsheet_path' => 'imports/spreadsheets/sample.xlsx',
+        'archive_path' => 'imports/archives/sample.zip',
+    ]);
+
+    // ─── Run the block of code in question ─────────────────────────────────
+    $this->artisan('db:seed', ['--class' => 'AttributeSeeder']);
+    $this->actingAs($this->user)
+        ->post('/imports/'.$import->id.'/confirmation');
+
+    // ─── Make assertions ────────────────────────────────────────────────────
+    Queue::assertPushedOn('image-variants', GenerateImageVariants::class);
+});
+
+it('estimated_cost_usd is derived from OpenRouterClient rates, not a hardcoded constant (T106)', function () {
+    $response = $this->actingAs($this->user)
+        ->post('/imports', [
+            'spreadsheet' => UploadedFile::fake()->createWithContent(
+                'sample.xlsx',
+                file_get_contents(base_path('tests/Fixtures/ProductEnrichment/sample-catalog.xlsx')),
+            ),
+            'archive' => UploadedFile::fake()->createWithContent(
+                'photos.zip',
+                file_get_contents(base_path('tests/Fixtures/ProductEnrichment/sample-photos.zip')),
+            ),
+        ]);
+
+    // ─── Make assertions ────────────────────────────────────────────────────
+    $import = Import::first();
+    expect($import)->not->toBeNull();
+
+    // The per-product rate from OpenRouterClient is ~0.018 + small token costs ≈ far less than 0.05
+    // Verify it's not the old hardcoded 0.05/product constant (row_count * 0.05 for any row count)
+    $perProductRate = (new OpenRouterClient)->estimateCostPerProduct();
+    $expectedCost = $import->row_count * $perProductRate;
+    expect((float) $import->estimated_cost_usd)->toEqual(round($expectedCost, 4));
 });

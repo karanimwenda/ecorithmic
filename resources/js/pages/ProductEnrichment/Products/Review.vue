@@ -21,6 +21,7 @@ interface AttributeValue {
     review_status: string;
     conflict_group_id: string | null;
     evidence_quote: string | null;
+    is_regeneratable: boolean;
     source: Source | null;
 }
 

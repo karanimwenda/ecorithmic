@@ -10,6 +10,15 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    // Copy-field codes that support feedback-driven regeneration (FR-019/US5)
+    private const array COPY_FIELD_CODES = [
+        'short_description',
+        'description',
+        'bullet_points',
+        'seo_title',
+        'seo_summary',
+    ];
+
     public function show(Request $request, Product $product): Response
     {
         $product->load(['sources']);
@@ -32,6 +41,8 @@ class ProductController extends Controller
                 'review_status' => $v->review_status,
                 'conflict_group_id' => $v->conflict_group_id,
                 'evidence_quote' => $v->evidence_quote,
+                // Regeneration is available for all copy-field codes regardless of origin (T108/FR-019)
+                'is_regeneratable' => in_array($v->attribute?->code, self::COPY_FIELD_CODES, strict: true),
                 'source' => $v->source ? [
                     'url' => $v->source->url,
                     'domain' => $v->source->domain,

@@ -45,12 +45,26 @@ function makePathTraversalZip(string $dir): string
 
 function makeDecompBombZip(string $dir): string
 {
-    // Create a file with a 200:1 ratio — large uncompressed, highly compressible
+    // Create a file with an extreme ratio — large uncompressed, highly compressible.
+    // 2MB of zeros compresses to ~2KB, producing a >100:1 ratio (BOMB_RATIO_THRESHOLD).
     $path = $dir.'/bomb.zip';
     $zip = new ZipArchive;
     $zip->open($path, ZipArchive::CREATE);
-    // 100KB of zeros (will compress to almost nothing, giving a huge ratio)
-    $zip->addFromString('bomb.bin', str_repeat("\0", 102400));
+    $zip->addFromString('bomb.bin', str_repeat("\0", 2 * 1024 * 1024));
+    $zip->close();
+
+    return $path;
+}
+
+function makeEncryptedZip(string $dir): string
+{
+    // Create a ZIP with an encrypted entry using ZipArchive::setEncryptionName (AES-256).
+    $path = $dir.'/encrypted.zip';
+    $zip = new ZipArchive;
+    $zip->open($path, ZipArchive::CREATE);
+    $zip->setPassword('secret');
+    $zip->addFromString('photo.jpg', 'encrypted content');
+    $zip->setEncryptionName('photo.jpg', ZipArchive::EM_AES_256);
     $zip->close();
 
     return $path;
@@ -81,10 +95,19 @@ it('detects decompression bombs by ratio', function () {
     $zipPath = makeDecompBombZip($this->tmpDir);
     $violations = $this->inspector->inspect($zipPath);
 
-    // The zeros compress with a huge ratio — should trigger the bomb check
-    // (if test environment doesn't produce >100x ratio, just verify inspection runs safely)
-    // The test primarily verifies no exception is thrown and the inspector handles the file.
-    expect($violations)->toBeArray();
+    // ─── Make assertions ────────────────────────────────────────────────────
+    // 2MB of zeros compresses far beyond the 100:1 threshold — a violation MUST be reported
+    expect($violations)->not->toBeEmpty();
+    expect(implode(' ', $violations))->toContain('bomb');
+});
+
+it('detects encrypted archives (FR-005)', function () {
+    $zipPath = makeEncryptedZip($this->tmpDir);
+    $violations = $this->inspector->inspect($zipPath);
+
+    // ─── Make assertions ────────────────────────────────────────────────────
+    expect($violations)->not->toBeEmpty();
+    expect(implode(' ', array_map(strtolower(...), $violations)))->toContain('encrypt');
 });
 
 it('reports safe when no violations exist', function () {

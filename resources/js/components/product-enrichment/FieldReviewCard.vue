@@ -25,6 +25,7 @@ interface AttributeValue {
     review_status: string;
     conflict_group_id: string | null;
     evidence_quote: string | null;
+    is_regeneratable: boolean;
     source: SourceInfo | null;
 }
 
@@ -215,7 +216,7 @@ const statusColors: Record<string, string> = {
                 ✎ Edit
             </button>
             <button
-                v-if="value.origin === 'ai_generated_copy'"
+                v-if="value.is_regeneratable"
                 class="rounded bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300"
                 @click="isRegenerating = !isRegenerating"
             >

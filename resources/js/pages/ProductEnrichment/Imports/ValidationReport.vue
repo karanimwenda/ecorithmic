@@ -27,7 +27,10 @@ interface ImportProps {
     created_at: string;
 }
 
-const props = defineProps<{ importData: ImportProps }>();
+const props = defineProps<{
+    importData: ImportProps;
+    unmatchedRowThreshold: number;
+}>();
 
 const confirmForm = useForm({});
 
@@ -151,7 +154,9 @@ const statusLabels: Record<string, string> = {
             class="mb-4 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20"
         >
             <p class="font-medium text-red-700 dark:text-red-400">
-                Import rejected: more than 50% of rows have no matching photo.
+                Import rejected: more than
+                {{ Math.round(unmatchedRowThreshold * 100) }}% of rows have no
+                matching photo.
             </p>
             <p class="mt-1 text-sm text-red-600">
                 Please upload a corrected file as a new import.

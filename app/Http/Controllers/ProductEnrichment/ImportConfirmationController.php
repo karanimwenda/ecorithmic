@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ProductEnrichment;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProductEnrichment\AnalyzeProductPhoto;
+use App\Jobs\ProductEnrichment\GenerateImageVariants;
 use App\Jobs\ProductEnrichment\ResearchProduct;
 use App\Models\ProductEnrichment\Attribute;
 use App\Models\ProductEnrichment\Import;
@@ -123,6 +124,7 @@ class ImportConfirmationController extends Controller
         foreach ($import->fresh()->products as $product) {
             ResearchProduct::dispatch($product, $import)->onQueue('research');
             AnalyzeProductPhoto::dispatch($product, $import)->onQueue('research');
+            GenerateImageVariants::dispatch($product, $import)->onQueue('image-variants');
         }
 
         return redirect()->route('imports.show', $import);

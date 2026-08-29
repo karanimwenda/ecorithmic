@@ -137,16 +137,29 @@ class ResearchProduct implements ShouldQueue
         // Check for conflicting sources and mark them
         $this->detectAndMarkConflicts();
 
-        // Dispatch copy generation when both research and vision are complete
+        // T103: gate copy generation until both research AND vision jobs are done
         $this->dispatchCopyGenerationIfReady();
     }
 
     public function failed(\Throwable $exception): void
     {
-        // FR-010: product must never be left in a failed state
-        // Mark as ungrounded — the product is still usable
-        $this->product->update(['updated_at' => now()]);
-        // AnalyzeProductPhoto will still run, providing at least vision-based values
+        // FR-010: product must never be left in a failed state — mark it as ungrounded
+        // and ensure all its research-origin fields are capped at low confidence.
+        $this->product->update(['is_ungrounded' => true]);
+
+        // Cap any pending ai_research values to low confidence (they may be absent if
+        // research failed before creating any, but this is a safety net).
+        ProductAttributeValue::where('product_id', $this->product->id)
+            ->where('origin', 'ai_research')
+            ->where('review_status', 'pending')
+            ->update(['confidence_tier' => 'low']);
+
+        // Still mark the research flag as done so copy generation can proceed
+        // (the product will be processed using photo/name only — FR-010)
+        $allDone = $this->product->markEnrichmentFlag('research_done', ['research_done', 'vision_done']);
+        if ($allDone) {
+            GenerateProductCopy::dispatch($this->product, $this->import)->onQueue('copy-generation');
+        }
     }
 
     private function detectAndMarkConflicts(): void
@@ -178,8 +191,11 @@ class ResearchProduct implements ShouldQueue
 
     private function dispatchCopyGenerationIfReady(): void
     {
-        // GenerateProductCopy waits for both research + vision to have run
-        GenerateProductCopy::dispatch($this->product, $this->import)->onQueue('copy-generation');
+        // T103: only dispatch copy generation when both research AND vision are complete
+        $allDone = $this->product->markEnrichmentFlag('research_done', ['research_done', 'vision_done']);
+        if ($allDone) {
+            GenerateProductCopy::dispatch($this->product, $this->import)->onQueue('copy-generation');
+        }
     }
 
     /**

@@ -30,20 +30,36 @@ class AnalyzeProductPhoto implements ShouldQueue
     public function handle(OpenRouterClient $openRouter): void
     {
         if ($this->import?->isHaltedForCost()) {
+            // Still mark vision as done so copy generation is not permanently blocked
+            $this->markVisionCompleteAndDispatchCopyIfReady();
+
             return;
         }
 
-        // Get the primary photo URL
+        // Get the primary photo
         $primaryAsset = $this->product->getMedia('original')
             ->where('is_primary', true)
             ->first();
 
         if (! $primaryAsset) {
             // No photo — nothing to analyze, but product still completes (FR-010)
+            $this->markVisionCompleteAndDispatchCopyIfReady();
+
             return;
         }
 
-        $photoUrl = $primaryAsset->getUrl();
+        // T105: convert to base64 data URI so the external vision API can receive the image
+        // (medialibrary URLs are private/local and cannot be fetched by OpenRouter)
+        $photoPath = $primaryAsset->getPath();
+        if (! file_exists($photoPath)) {
+            $this->markVisionCompleteAndDispatchCopyIfReady();
+
+            return;
+        }
+
+        $mimeType = mime_content_type($photoPath) ?: 'image/jpeg';
+        $base64 = base64_encode((string) file_get_contents($photoPath));
+        $imageDataUri = "data:{$mimeType};base64,{$base64}";
 
         $attributes = Attribute::where('is_ai_enrichable', true)->get()->keyBy('code');
 
@@ -76,7 +92,7 @@ class AnalyzeProductPhoto implements ShouldQueue
             model: 'google/gemini-2.5-flash-lite',
             messages: [['role' => 'user', 'content' => $prompt]],
             responseFormat: ['type' => 'json_schema', 'json_schema' => $schema],
-            imageAttachment: ['url' => $photoUrl, 'detail' => 'auto'],
+            imageAttachment: ['url' => $imageDataUri, 'detail' => 'auto'],
         );
 
         $costUsd = $result['cost_usd'];
@@ -123,10 +139,23 @@ class AnalyzeProductPhoto implements ShouldQueue
         if ($costUsd > 0 && $this->import) {
             $this->import->accumulateCost($costUsd);
         }
+
+        // T103: mark vision complete; dispatch copy generation if research is also done
+        $this->markVisionCompleteAndDispatchCopyIfReady();
     }
 
     public function failed(\Throwable $exception): void
     {
-        // FR-010: product must never be left failed — AnalyzeProductPhoto failure is non-blocking
+        // FR-010: product must never be left failed — vision failure is non-blocking
+        // Still mark vision as done so copy generation is not permanently blocked
+        $this->markVisionCompleteAndDispatchCopyIfReady();
+    }
+
+    private function markVisionCompleteAndDispatchCopyIfReady(): void
+    {
+        $allDone = $this->product->markEnrichmentFlag('vision_done', ['research_done', 'vision_done']);
+        if ($allDone) {
+            GenerateProductCopy::dispatch($this->product, $this->import)->onQueue('copy-generation');
+        }
     }
 }
