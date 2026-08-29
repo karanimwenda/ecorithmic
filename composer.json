@@ -81,6 +81,13 @@
             "@types:check",
             "@php artisan test"
         ],
+        "rector:check": [
+            "./vendor/bin/rector process --dry-run"
+        ],
+        "rector:fix": [
+            "./vendor/bin/rector process",
+            "./vendor/bin/pint --parallel"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
