@@ -1,0 +1,17 @@
+{
+  "integration": "bob",
+  "version": "1.0.2.dev0",
+  "installed_at": "2026-08-29T16:09:35.211348+00:00",
+  "files": {
+    ".bob/skills/speckit-analyze/SKILL.md": "b519a14b6be0893e39bb0c884de585a37bc079a0387931da2c3201d9b6119651",
+    ".bob/skills/speckit-clarify/SKILL.md": "44609e86e549410bf8dce0188db682ee6ec2d534e5698339805140fc1c6d005d",
+    ".bob/skills/speckit-constitution/SKILL.md": "2515bb60ba2c01515793e088712250d1c512c3d24c3e14a96bb24800b2e4e323",
+    ".bob/skills/speckit-implement/SKILL.md": "d4c421ecf9fdd55a376eb040b4e8ab31b3befdc4ba3d9925486a3a37ecf050fb",
+    ".bob/skills/speckit-converge/SKILL.md": "f630c0e7b97337edb9160faf3661e97bf7d10ccce6b53b6e6c2ea027bafa73ce",
+    ".bob/skills/speckit-plan/SKILL.md": "b05e9c790ab2399574b13ba7f80bd5de431002ac8beb88d6b56efa2bbbf94f48",
+    ".bob/skills/speckit-checklist/SKILL.md": "709f603cb42bdecdf230e11538685375d4ec28aa5866d54bf7e09ed79f71275f",
+    ".bob/skills/speckit-specify/SKILL.md": "6468cd4ace4e2f8e67af761dce4dcec659fb3a251e946a589c3456007eab5ae0",
+    ".bob/skills/speckit-tasks/SKILL.md": "a840f68b0daccb06a8198fd2f355e5b189b11e3a24e4252704e4e9f02ea946b9",
+    ".bob/skills/speckit-taskstoissues/SKILL.md": "48f741b4f7ebf7ad85a88d035d70b4ae5f358e66de6fe82c78925e7760bb4208"
+  }
+}

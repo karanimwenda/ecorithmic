@@ -36,8 +36,6 @@ AGENTS.md
 .agents/
 boost.json
 
-.specify
-
 # IBM Bob
 .bob/
 .opencode/
