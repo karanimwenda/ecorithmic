@@ -27,4 +27,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Custom
 _ide_helper*
+AGENTS.md
+.agents/
+boost.json
