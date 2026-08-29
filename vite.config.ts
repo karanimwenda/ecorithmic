@@ -77,6 +77,8 @@ export default defineConfig({
             'AGENTS.md',
             'boost.json',
             '.specify',
+            'specs',
+            '.ai',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],
