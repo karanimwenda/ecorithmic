@@ -30,6 +30,15 @@ yarn-error.log
 
 # Custom
 _ide_helper*
+
+# Laravel Boost
 AGENTS.md
 .agents/
 boost.json
+
+.specify
+
+# IBM Bob
+.bob/
+.opencode/
+opencode.json
