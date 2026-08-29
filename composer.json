@@ -18,8 +18,13 @@
         "laravel/wayfinder": "^0.1.14"
     },
     "require-dev": {
+        "ace-of-aces/intellipest": "^1.0",
+        "barryvdh/laravel-ide-helper": "^3.7",
+        "brianium/paratest": "^7.24",
+        "driftingly/rector-laravel": "^2.6",
         "fakerphp/faker": "^1.24",
-        "larastan/larastan": "^3.9",
+        "fruitcake/laravel-debugbar": "^4.4",
+        "larastan/larastan": "^3.10",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",

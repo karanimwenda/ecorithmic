@@ -73,6 +73,8 @@ export default defineConfig({
             'resources/views/mail/*',
             // custom
             'pnpm-workspace.yaml',
+            '.agents/**',
+            'AGENTS.md',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],
