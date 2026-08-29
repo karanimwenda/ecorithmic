@@ -1,10 +1,10 @@
 {
     "$schema": "https://shadcn-vue.com/schema.json",
-    "style": "new-york-v4",
+    "style": "reka-mira",
     "tailwind": {
-        "config": "tailwind.config.js",
+        "config": "",
         "css": "resources/css/app.css",
-        "baseColor": "neutral",
+        "baseColor": "mist",
         "cssVariables": true,
         "prefix": ""
     },
@@ -15,5 +15,12 @@
         "ui": "@/components/ui",
         "lib": "@/lib"
     },
-    "iconLibrary": "lucide"
+    "iconLibrary": "lucide",
+    "font": "montserrat",
+    "typescript": true,
+    "rtl": false,
+    "pointer": false,
+    "menuColor": "default",
+    "menuAccent": "bold",
+    "registries": {}
 }

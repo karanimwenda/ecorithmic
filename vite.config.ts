@@ -71,6 +71,8 @@ export default defineConfig({
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
+            // custom
+            'pnpm-workspace.yaml',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],
