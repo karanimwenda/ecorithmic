@@ -34,7 +34,7 @@ jobs:
         with:
           php-version: "8.5"
           tools: composer:v2
-          coverage: none
+          coverage: xdebug
 
       - name: Setup Application
         run: composer setup
