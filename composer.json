@@ -81,6 +81,12 @@
             "@types:check",
             "@php artisan test"
         ],
+        "ide": [
+            "@php artisan ide-helper:generate",
+            "@php artisan ide-helper:models -W -R",
+            "./vendor/bin/intellipest -o '_ide_helper_pest.php' -s --expectation-helpers",
+            "./vendor/bin/pint --parallel"
+        ],
         "rector:check": [
             "./vendor/bin/rector process --dry-run"
         ],
