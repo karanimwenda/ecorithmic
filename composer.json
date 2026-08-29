@@ -53,33 +53,38 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
+            "pnpm install",
+            "pnpm run build"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"
         ],
         "lint": [
-            "pint --parallel"
+            "pint --parallel",
+            "npm run check:fix"
         ],
         "lint:check": [
-            "pint --parallel --test"
+            "./vendor/bin/phpstan analyse --memory-limit=2G",
+            "@rector:check",
+            "pint --parallel --test",
+            "npm run check",
+            "npm run types:check"
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
-            "npm run check",
-            "npm run types:check",
+            "@lint:check",
             "@test"
         ],
-        "types:check": [
-            "phpstan analyse"
-        ],
         "test": [
+            "rm -rf public/storage/coverage",
             "@php artisan config:clear --ansi",
-            "@lint:check",
-            "@types:check",
-            "@php artisan test"
+            "@php artisan test --parallel --coverage"
+        ],
+        "test:coverage-html": [
+            "rm -rf public/storage/coverage",
+            "@php artisan test --parallel --coverage-html public/storage/coverage",
+            "@php artisan tinker --execute 'echo(url(\"/storage/coverage/index.html\"))'"
         ],
         "ide": [
             "@php artisan ide-helper:generate",
@@ -96,7 +101,8 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "cp .hooks/pre-commit .git/hooks/pre-commit"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",

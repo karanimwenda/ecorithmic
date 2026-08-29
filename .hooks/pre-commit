@@ -1,0 +1,31 @@
+#!/bin/sh
+# ======================================================================================
+# 1. Formatting
+# ======================================================================================
+phpfiles=$(git diff --cached --name-only --diff-filter=ACM -- '*.php')
+if [ -n "$phpfiles" ]; then
+    echo "Processing PHP files: $phpfiles"
+    vendor/bin/pint $phpfiles -q
+fi
+
+tsfiles=$(git diff --cached --name-only --diff-filter=ACM -- '*.tsx' '*.css' '*.ts')
+if [ -n "$tsfiles" ]; then
+    echo "Processing Frontend files: $tsfiles"
+    pnpm run check:fix $tsfiles
+fi
+
+# ======================================================================================
+# 2. Linting and Static Analysis
+# ======================================================================================
+composer run ci:check || exit 1
+
+# ======================================================================================
+# 3. Persistence
+# ======================================================================================
+if [ -n "$phpfiles" ]; then
+    git add $phpfiles
+fi
+
+if [ -n "$tsfiles" ]; then
+    git add $tsfiles
+fi

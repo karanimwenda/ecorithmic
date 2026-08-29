@@ -75,6 +75,7 @@ export default defineConfig({
             'pnpm-workspace.yaml',
             '.agents/**',
             'AGENTS.md',
+            'boost.json',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],
