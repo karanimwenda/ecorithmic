@@ -14,8 +14,11 @@
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
+        "laravel/horizon": "^5.48",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "rap2hpoutre/fast-excel": "^5.15",
+        "spatie/laravel-medialibrary": "^11.23"
     },
     "require-dev": {
         "ace-of-aces/intellipest": "^1.0",
@@ -33,7 +36,8 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.9.3",
         "pestphp/pest": "^5.1",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "spatie/guidelines-skills": "^1.1"
     },
     "autoload": {
         "psr-4": {

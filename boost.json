@@ -1,12 +1,17 @@
 {
     "agents": [
-        "opencode",
-        "zed"
+        "zed",
+        "opencode"
     ],
     "cloud": false,
     "guidelines": true,
     "mcp": true,
     "nightwatch": false,
+    "packages": [
+        "spatie/laravel-medialibrary",
+        "spatie/guidelines-skills",
+        "fruitcake/laravel-debugbar"
+    ],
     "sail": false,
     "skills": [
         "infer-conventions",
@@ -16,6 +21,12 @@
         "configuring-horizon",
         "wayfinder-development",
         "inertia-vue-development",
-        "tailwindcss-development"
+        "tailwindcss-development",
+        "medialibrary-development",
+        "debug-using-debugbar",
+        "spatie-javascript",
+        "spatie-laravel-php",
+        "spatie-security",
+        "spatie-version-control"
     ]
 }
