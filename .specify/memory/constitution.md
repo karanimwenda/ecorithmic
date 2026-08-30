@@ -1,23 +1,21 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.0.0 → 1.1.0
-Rationale for bump: MINOR — new principle added (Do Things the Laravel Way), no existing
-  principle redefined or removed.
+Version change: 1.1.0 → 1.2.0
+Rationale for bump: MINOR — materially expanded guidance for Principle VI (shadcn-vue / Tailwind
+  direct-use prohibition and MCP/skill-first check obligation added).
 
-Modified principles: none
+Modified principles:
+  - VI. Shadcn-Vue UI, pnpm Only → VI. Shadcn-Vue UI & MCP-First, pnpm Only
+    (Extended: explicit prohibition on using Tailwind utilities directly when a shadcn-vue
+     component exists, mandatory shadcn-vue skill + MCP check before writing new UI,
+     and justified-exception clause added.)
 
-Added principles:
-  - VIII. Do Things the Laravel Way
-
-Added sections: none (Core Principles list extended only)
-
+Added principles: none
+Added sections: none
 Removed sections: none
 
 Deferred / follow-up TODOs: none.
-
-Templates requiring follow-up: none reviewed/modified by this command (out of scope per
-  the constitution command's scope guard).
 -->
 
 # Ecorithmic Constitution
@@ -65,14 +63,28 @@ later.
 Rationale: coverage thresholds only hold discipline if enforced at the same commit that would
 otherwise drop them, not retroactively.
 
-### VI. Shadcn-Vue UI, pnpm Only
-All UI components MUST be built from or composed with shadcn-vue (https://shadcn-vue.com)
-primitives — no competing component library may be introduced. All JavaScript dependency
-management MUST use `pnpm`; `npm`/`yarn` lockfiles or commands MUST NOT be introduced or
-committed.
+### VI. Shadcn-Vue UI & MCP-First, pnpm Only
+All UI MUST be built from or composed with shadcn-vue (https://shadcn-vue.com) primitives.
+Raw Tailwind CSS utilities MUST NOT be used to hand-roll a component that shadcn-vue already
+provides or can reasonably provide. Before writing any new UI component or layout element,
+the developer (or agent) MUST:
+
+1. Activate the `shadcn-vue` skill to load its instructions.
+2. Use the shadcn-vue MCP tools (`search_items_in_registries`, `view_items_in_registries`,
+   `get_item_examples_from_registries`) to check whether the required component already
+   exists in the registry.
+3. Only fall back to a custom Tailwind-only implementation when a shadcn-vue primitive
+   genuinely does not cover the use-case **and** that justification is explicitly stated
+   in the PR description or code comment.
+
+No competing component library may be introduced alongside shadcn-vue. All JavaScript
+dependency management MUST use `pnpm`; `npm`/`yarn` lockfiles or commands MUST NOT be
+introduced or committed.
 
 Rationale: one component system and one package manager eliminate an entire category of
-"works on my machine" issues and inconsistent-UI drift.
+"works on my machine" issues and inconsistent-UI drift. Requiring a registry check before
+hand-rolling prevents duplicated, subtly inconsistent copies of components that already
+exist in the design system.
 
 ### VII. Standardized Test Structure
 Every test MUST be organized into four labeled sections, in this exact order and comment-block
@@ -131,8 +143,10 @@ running the `:check` variant.
 - **Package manager**: `pnpm` exclusively for all JavaScript/TypeScript dependency work
   (install, add, remove, scripts). Any `package-lock.json` or `yarn.lock` found in the repo is
   stale and MUST be removed the next time it is touched.
-- **UI components**: `shadcn-vue` is the only sanctioned component source; new components are
-  added via its CLI/pattern, not hand-rolled duplicates of what it already provides.
+- **UI components**: `shadcn-vue` is the only sanctioned component source. Before adding a
+  component, run the shadcn-vue MCP registry check (Principle VI). New components are added
+  via the shadcn-vue CLI/pattern; hand-rolled duplicates of existing primitives are not
+  permitted.
 
 ## Governance
 
@@ -147,4 +161,4 @@ running the `:check` variant.
   eligible for merge. Any exception requires an explicit, recorded justification in the PR
   description — silent exceptions are a constitution violation.
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-29 | **Last Amended**: 2026-08-29
+**Version**: 1.2.0 | **Ratified**: 2026-08-29 | **Last Amended**: 2025-07-17
