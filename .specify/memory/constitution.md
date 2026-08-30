@@ -1,15 +1,21 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.3.0 → 1.4.0
-Rationale for bump: MINOR — new principle added (X. Spatie Laravel & PHP Coding Standards).
+Version change: 1.4.0 → 1.5.0
+Rationale for bump: MINOR — new principle added (XI. Type Safety: Laravel ↔ Inertia ↔ TypeScript).
+  Quality Gates and Tooling Conventions sections extended to cover the type-generation pipeline.
 
 Modified principles: none
 
 Added principles:
-  - X. Spatie Laravel & PHP Coding Standards
+  - XI. Type Safety: Laravel ↔ Inertia ↔ TypeScript
 
 Added sections: none
+
+Modified sections:
+  - Quality Gates: added typescript:transform gate
+  - Tooling Conventions: added type-generation pipeline entry
+
 Removed sections: none
 
 Deferred / follow-up TODOs: none.
@@ -215,6 +221,49 @@ developer — or agent — can read, write, and review PHP/Laravel code with zer
 ambiguity. It also aligns tightly with Principle VIII (Do Things the Laravel Way), since
 Spatie's guidelines are built on top of Laravel conventions.
 
+### XI. Type Safety: Laravel ↔ Inertia ↔ TypeScript
+Every Inertia page MUST receive a typed data object; no ad-hoc arrays or manually
+hand-written frontend types are permitted for page props.
+
+**Backend — `spatie/laravel-data` Data classes:**
+- Define one `Spatie\LaravelData\Data` subclass under `app/Data/` per Inertia view.
+  Annotate it `#[TypeScript]` so the TypeScript transformer picks it up.
+- Data classes are the **sole** mechanism for shaping response payloads sent to Inertia views.
+  Do NOT create separate Laravel API Resource classes (`JsonResource`) for this purpose;
+  Data classes replace them. Form Requests remain a separate concern and MUST still be used
+  for all input validation.
+- Controllers MUST pass a single typed Data object to `Inertia::render()`, never a raw array:
+  ```php
+  return Inertia::render('Products/Index', ProductsData::from($products));
+  ```
+
+**Deferred props:**
+- Deferred props MUST be typed as `DeferProp|X` in the Data class.
+- `Inertia\DeferProp::class` MUST be registered in `default_type_replacements`
+  inside `config/typescript-transformer.php` so the transformer emits the correct TS type.
+
+**Shared data:**
+- Shared props exposed via `HandleInertiaRequests::share()` MUST go through a dedicated
+  Data class (e.g. `SharedData`). The generated `SharedData` TypeScript type MUST be merged
+  into the frontend page props type so shared fields are statically known on every page.
+
+**TypeScript generation — NEVER hand-author TS types:**
+- TypeScript types for all Data classes and Enums MUST be generated exclusively via
+  `php artisan typescript:transform` (aliased as `composer run transform-types`).
+- Output MUST land in `resources/js/types/generated.d.ts` (or equivalent single generated file).
+- Hand-authored types that duplicate or shadow generated types are a constitution violation.
+
+**Automation requirements:**
+- In development, type generation MUST run automatically when `app/Data/` or `app/Enums/`
+  changes. Use `vite-plugin-watch` (already installed) or an equivalent file-watcher.
+- In CI, `php artisan typescript:transform` MUST run before `pnpm run build`. A stale or
+  missing generated file MUST fail the build — it MUST NOT ship silently.
+
+Rationale: renaming or adding a property on a backend Data object surfaces immediately as a
+compile-time error on both the PHP side (named-argument mismatch caught by PHPStan) and the
+TypeScript side (type mismatch caught by `vue-tsc`). This eliminates an entire class of
+runtime bugs where backend and frontend drift out of sync silently.
+
 ## Quality Gates
 
 The following commands are the canonical, non-negotiable verification gates. They MUST be run
@@ -223,6 +272,8 @@ The following commands are the canonical, non-negotiable verification gates. The
 - `composer run lint:check` — static analysis (Principle III)
 - `composer run test` — regression check (Principle IV)
 - `php artisan test --parallel --coverage --min=100` — coverage gate (Principle V)
+- `php artisan typescript:transform` — type generation MUST run before `pnpm run build`
+  (Principle XI); a missing or stale `generated.d.ts` fails the build
 
 `composer run lint` (without `:check`) may be used locally to auto-fix formatting issues before
 running the `:check` variant.
@@ -239,6 +290,11 @@ running the `:check` variant.
 - **PHP/Laravel code style**: the `spatie-laravel-php` skill is the active style authority
   for all `.php` and `.blade.php` files (Principle X). It MUST be activated before writing
   or reviewing PHP code.
+- **TypeScript type generation**: `spatie/laravel-data` + `spatie/laravel-typescript-transformer`
+  own all frontend type definitions (Principle XI). Run `php artisan typescript:transform`
+  (aliased `composer run transform-types`) to regenerate `resources/js/types/generated.d.ts`.
+  `vite-plugin-watch` MUST be configured to trigger this automatically in dev when
+  `app/Data/` or `app/Enums/` changes.
 
 ## Governance
 
@@ -253,4 +309,4 @@ running the `:check` variant.
   eligible for merge. Any exception requires an explicit, recorded justification in the PR
   description — silent exceptions are a constitution violation.
 
-**Version**: 1.4.0 | **Ratified**: 2026-08-29 | **Last Amended**: 2025-07-17
+**Version**: 1.5.0 | **Ratified**: 2026-08-29 | **Last Amended**: 2025-07-17
