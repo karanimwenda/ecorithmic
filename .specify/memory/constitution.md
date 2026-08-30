@@ -1,17 +1,14 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.1.0 → 1.2.0
-Rationale for bump: MINOR — materially expanded guidance for Principle VI (shadcn-vue / Tailwind
-  direct-use prohibition and MCP/skill-first check obligation added).
+Version change: 1.3.0 → 1.4.0
+Rationale for bump: MINOR — new principle added (X. Spatie Laravel & PHP Coding Standards).
 
-Modified principles:
-  - VI. Shadcn-Vue UI, pnpm Only → VI. Shadcn-Vue UI & MCP-First, pnpm Only
-    (Extended: explicit prohibition on using Tailwind utilities directly when a shadcn-vue
-     component exists, mandatory shadcn-vue skill + MCP check before writing new UI,
-     and justified-exception clause added.)
+Modified principles: none
 
-Added principles: none
+Added principles:
+  - X. Spatie Laravel & PHP Coding Standards
+
 Added sections: none
 Removed sections: none
 
@@ -126,6 +123,98 @@ Rationale: fighting the framework produces code that's harder for any Laravel de
 human or AI — to predict, maintain, or upgrade; Boost exists specifically to keep guidance
 accurate to the versions actually installed here.
 
+### IX. Cruddy by Design (Controller Shape)
+Every controller MUST expose only the seven standard RESTful actions: `index`, `show`,
+`create`, `store`, `edit`, `update`, `destroy`. Custom, non-resourceful action names MUST
+NOT be added to any controller.
+
+**When you feel the urge to add a custom action** (`subscribe`, `publish`, `approve`,
+`archive`, `reorder`, etc.), stop and ask: *"What resource is being created, updated, or
+destroyed here?"* Then model that as its own controller using only the seven standard actions.
+
+**Decision heuristic** — ask: *"What do I have now that I didn't have before?"*
+- A new record or relationship → `store` on a new (possibly new) resource controller.
+- A record going away → `destroy` on its controller.
+- A state change (`published`, `archived`, `approved`) → that state is a resource; create a
+  dedicated controller for it (e.g. `PublishedPostController@store` / `@destroy`).
+
+**Invokable controllers**: when a controller genuinely needs only one of the seven actions,
+make it invokable (`__invoke`) and route to the class directly. Do not name a single method
+on a class if that name would be arbitrarily chosen. Do not make a multi-action controller
+invokable.
+
+**Rules in summary**:
+- One controller = one resource = one set of RESTful operations.
+- Never add a method that is not one of the seven standard actions.
+- More controllers are fine — prefer many small, single-purpose controllers over fewer
+  large, special-cased ones.
+- State changes, pivot/join records, and relationship toggles are resources — name them and
+  give them their own controller.
+- Controllers orchestrate only; real work is delegated to models, Eloquent, or Action classes.
+
+Rationale (Adam Wathan, "Cruddy by Design", Laracon 2017): sticking to CRUD forces you to
+name and surface real domain concepts (subscriptions, publications, memberships) instead of
+hiding them inside verbs. Every controller then looks and behaves the same way — any developer
+can jump in and know what to expect, controllers stay thin and testable, and domain concepts
+are first-class citizens.
+
+### X. Spatie Laravel & PHP Coding Standards
+All PHP and Laravel code MUST comply with the Spatie Laravel & PHP guidelines
+(https://spatie.be/guidelines). The `spatie-laravel-php` skill MUST be activated whenever
+any `.php` or `.blade.php` file is created or modified.
+
+The non-negotiable rules from this standard are:
+
+**PHP style:**
+- Follow PSR-1, PSR-2, and PSR-12.
+- Use typed properties and explicit return types (including `void`) on all methods. Use the
+  short nullable syntax: `?string`, not `string|null`.
+- Use constructor property promotion when all constructor parameters can be promoted.
+- Do not use `final` or `readonly` by default.
+- Declare one trait per `use` statement (one trait per line).
+
+**Control flow:**
+- Happy path LAST: handle error/guard conditions first with early returns; the success path
+  is the final block.
+- NEVER use `else` when an early return is possible.
+- ALWAYS use curly braces for control structures, even single-statement bodies.
+
+**Method chaining:**
+- Once a method chain breaks across lines, EVERY subsequent `->` MUST be on its own line.
+  Never mix single-line and multi-line chaining in the same expression.
+
+**Docblocks:**
+- Do NOT add docblocks to fully type-hinted methods unless a description adds context
+  beyond what the signature already communicates.
+- Never use fully qualified class names in docblocks; always import and use the short name.
+- Document iterables with generics: `/** @return Collection<int, User> */`.
+- Use array shape notation for fixed-key arrays: `/** @return array{first: Foo, second: Bar} */`.
+
+**Laravel conventions:**
+- Route URLs MUST be kebab-case (`/open-source`).
+- Route names MUST be camelCase (`->name('openSource')`).
+- Route parameters MUST be camelCase (`{userId}`).
+- Route definitions MUST use tuple notation: `[Controller::class, 'method']`.
+- Controller class names MUST use the plural resource name + `Controller` suffix
+  (`PostsController`, not `PostController`).
+- Use `config()` helper everywhere; `env()` is only permitted inside `config/*.php` files.
+- Service third-party configs MUST go into `config/services.php`, not new config files.
+- Use `__()` for all translation strings; never use `@lang` in Blade.
+- Validation rules MUST use array notation: `['required', 'email']`, not pipe strings.
+- Enum cases and class constants MUST use PascalCase (`case Published`, `const SessionToken`).
+
+**Naming (quick reference):**
+- Config files: kebab-case (`pdf-generator.php`); config keys: snake_case.
+- Artisan commands: kebab-case (`delete-old-records`).
+- Jobs: action-based (`CreateUser`); Events: tense-based (`UserRegistered`);
+  Listeners: `SendInvitationMailListener`; Mailables: `AccountActivatedMail`.
+- API resource URLs: plural and kebab-case (`/error-occurrences`).
+
+Rationale: a single, well-known style guide (Spatie's) applied universally means any
+developer — or agent — can read, write, and review PHP/Laravel code with zero style
+ambiguity. It also aligns tightly with Principle VIII (Do Things the Laravel Way), since
+Spatie's guidelines are built on top of Laravel conventions.
+
 ## Quality Gates
 
 The following commands are the canonical, non-negotiable verification gates. They MUST be run
@@ -147,6 +236,9 @@ running the `:check` variant.
   component, run the shadcn-vue MCP registry check (Principle VI). New components are added
   via the shadcn-vue CLI/pattern; hand-rolled duplicates of existing primitives are not
   permitted.
+- **PHP/Laravel code style**: the `spatie-laravel-php` skill is the active style authority
+  for all `.php` and `.blade.php` files (Principle X). It MUST be activated before writing
+  or reviewing PHP code.
 
 ## Governance
 
@@ -161,4 +253,4 @@ running the `:check` variant.
   eligible for merge. Any exception requires an explicit, recorded justification in the PR
   description — silent exceptions are a constitution violation.
 
-**Version**: 1.2.0 | **Ratified**: 2026-08-29 | **Last Amended**: 2025-07-17
+**Version**: 1.4.0 | **Ratified**: 2026-08-29 | **Last Amended**: 2025-07-17
