@@ -18,7 +18,9 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "rap2hpoutre/fast-excel": "^5.15",
-        "spatie/laravel-medialibrary": "^11.23"
+        "spatie/laravel-data": "^4.23",
+        "spatie/laravel-medialibrary": "^11.23",
+        "spatie/laravel-typescript-transformer": "^3.3"
     },
     "require-dev": {
         "ace-of-aces/intellipest": "^1.0",

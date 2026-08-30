@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
+import { watch } from 'vite-plugin-watch';
 
 export default defineConfig({
     plugins: lazyPlugins(() => [
@@ -29,6 +30,10 @@ export default defineConfig({
         }),
         wayfinder({
             formVariants: true,
+        }),
+        watch({
+            pattern: 'app/{Data,Enums}/**/*.php',
+            command: 'php artisan typescript:transform',
         }),
     ]),
     server: {

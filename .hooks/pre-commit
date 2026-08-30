@@ -8,7 +8,7 @@ if [ -n "$phpfiles" ]; then
     vendor/bin/pint $phpfiles -q
 fi
 
-tsfiles=$(git diff --cached --name-only --diff-filter=ACM -- '*.tsx' '*.css' '*.ts')
+tsfiles=$(git diff --cached --name-only --diff-filter=ACM -- '*.tsx' '*.css' '*.ts' '*.json')
 if [ -n "$tsfiles" ]; then
     echo "Processing Frontend files: $tsfiles"
     pnpm run check:fix $tsfiles
